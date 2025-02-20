@@ -23,6 +23,10 @@ async function run() {
   try {
     const db = client.db("jobTask-db");
     const usersCollection = db.collection("users");
+    const tasksCollection = db.collection("tasks");
+    const toDoCollection = db.collection("toDo");
+    const inProgressCollection = db.collection("inProgress");
+    const doneCollection = db.collection("done");
 
     app.post("/users/:email", async (req, res) => {
       const email = req.params.email;
@@ -38,6 +42,26 @@ async function run() {
         status: "Normal",
         timestamp: Date.now(),
       });
+      res.send(result);
+    });
+
+    app.post("/add-task", async (req, res) => {
+      const task = req.body;
+      const result = await tasksCollection.insertOne(task);
+
+      if (task.category === "To-Do") {
+        await toDoCollection.insertOne(task);
+      } else if (task.category === "In Progress") {
+        await inProgressCollection.insertOne(task);
+      } else if (task.category === "Done") {
+        await doneCollection.insertOne(task);
+      }
+
+      res.send(result);
+    });
+
+    app.get("/all-task", async (req, res) => {
+      const result = await tasksCollection.find().toArray();
       res.send(result);
     });
 
